@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVRV Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>MVRV Ratio Dashboard</h2>
+  <select id="asset">
+    <option value="btc">Bitcoin (BTC)</option>
+    <option value="sol">Solana (SOL)</option>
+  </select>
+  <select id="freq">
+    <option value="hourly">Hourly</option>
+    <option value="daily">Daily</option>
+  </select>
+  <canvas id="mvrvChart" width="600" height="400"></canvas>
+
+  <script>
+    const ctx = document.getElementById('mvrvChart').getContext('2d');
+    let chart;
+
+    async function fetchData() {
+      const asset = document.getElementById('asset').value;
+      const freq = document.getElementById('freq').value;
+      const res = await fetch(`/api/mvrv/${asset}/${freq}`);
+      const data = await res.json();
+      return {
+        labels: data.map(item => item.time),
+        values: data.map(item => item.value)
+      };
+    }
+
+    async function updateChart() {
+      const data = await fetchData();
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: 'MVRV Ratio',
+            data: data.values,
+            borderColor: 'blue',
+            tension: 0.3
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: false
+            }
+          }
+        }
+      });
+    }
+
+    document.getElementById('asset').addEventListener('change', updateChart);
+    document.getElementById('freq').addEventListener('change', updateChart);
+    updateChart();
+  </script>
+</body>
+</html>
